@@ -66,7 +66,7 @@ def ParseArgs():
 AllWords:List[str] = []
 DictionaryWithMeanings:Dict[str,Dict[str,List[str]]] = {}
 
-def OpenAsCsv(file:str):
+def ParseCsvFile(file:str):
     try:
        with open(file,"r") as csv:
            definetions:List[str] = []
@@ -88,14 +88,37 @@ def OpenAsCsv(file:str):
         print(f"file:{file} does not exist",end="\n")
         exit(1)
 
+def WriteCsvFile(file:str,key:str):
+    #don't think writing to file can fail
+    words:List[str] = params.WordLists[key] 
+    with open(file,"w") as csv:
+        for word in words:
+            csv.write(f"{word},")
+        csv.write("\n")
+        for key in list(DictionaryWithMeanings.keys()):
+            csv.write(f"{key},")
+            for w in words:
+                if w in DictionaryWithMeanings[key]:
+                    csv.write("[")
+                    for item in DictionaryWithMeanings[key][w]:
+                        csv.write(f"{item},")
+                    csv.write("],")
+                else:
+                    csv.write("[NULL],")
+            csv.write("\n")
+
 def main():
     ParseArgs()
     if(len(params.WordLists) != len(params.Outs)):
         print("number of wordlists and outout files must be the same",end="\n")
         exit(1)
-    pprint(AllWords)
-    OpenAsCsv(params.Dicts[0])
-    pprint(DictionaryWithMeanings)
+    #parsing of dictionarys
+    for d in params.Dicts:
+        ParseCsvFile(d)
+    wordListKeys:List[str] = list(params.WordLists.keys())
+    for i,file in enumerate(params.Outs):
+        WriteCsvFile(file,wordListKeys[i])
+    return
 
 if __name__ == "__main__":
     main()
