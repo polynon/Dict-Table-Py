@@ -50,6 +50,7 @@ def ParseArgs():
                     print(f"word:{arg} already defined in wordlist:{currentWordList}",end="\n")
                     exit(1)
                 params.WordLists[currentWordList].append(arg);
+                AllWords.append(arg)
             case Modes.DICTS:
                 if(arg in params.Dicts):
                     print(f"dictinary file:{arg} has already been provided",end="\n")
@@ -62,16 +63,39 @@ def ParseArgs():
                 print("unexpected flag mode[code bug]",end="\n")
                 exit(1)
 
+AllWords:List[str] = []
+DictionaryWithMeanings:Dict[str,Dict[str,List[str]]] = {}
+
+def OpenAsCsv(file:str):
+    try:
+       with open(file,"r") as csv:
+           definetions:List[str] = []
+           DictionaryWithMeanings[file] = {}
+           while True:
+                definetions = []
+                line = csv.readline()
+                if not line:
+                    break
+                definetions = line.split(",")
+                if definetions[0] not in AllWords:
+                    continue 
+                if definetions[0] not in DictionaryWithMeanings[file]:
+                    DictionaryWithMeanings[file][definetions[0]] = definetions[1:-1:]
+                    continue
+                for item in definetions[1:-1:]:
+                    DictionaryWithMeanings[file][definetions[0]].append(item)
+    except FileNotFoundError:
+        print(f"file:{file} does not exist",end="\n")
+        exit(1)
+
 def main():
     ParseArgs()
-    print("outs:",end="\n")
-    for out in params.Outs:
-        print(out,end="\n")
-    print("Dicts:",end="\n")
-    for d in params.Dicts:
-        print(d,end="\n")
-    print("wordLists:",end="\n")
-    pprint(params.WordLists,width = 80)
+    if(len(params.WordLists) != len(params.Outs)):
+        print("number of wordlists and outout files must be the same",end="\n")
+        exit(1)
+    pprint(AllWords)
+    OpenAsCsv(params.Dicts[0])
+    pprint(DictionaryWithMeanings)
 
 if __name__ == "__main__":
     main()
