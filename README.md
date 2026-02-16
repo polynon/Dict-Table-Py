@@ -20,6 +20,7 @@ Output Flag and wordList flag have to have the same number of names
 ### Basic Example
 
 #####build\.sh
+
 `python main.py -o want.csv love.csv \
 -wl want want desire wish need -wl love love like enjoy\
 -d dictionarys/spanish.csv dictionarys/french.csv `
