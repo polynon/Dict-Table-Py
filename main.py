@@ -14,12 +14,14 @@ Map:Dict[str,Modes] = {"-o":Modes.OUT,"-wl":Modes.WORDLIST,"-d":Modes.DICTS}
 #static
 class Params:
     Outs:List[str]
+    WordListsKeys:List[str]
     WordLists:Dict[str,List[str]]
     Dicts:List[str]
     def __init__(self):
-        self.Outs      = []
-        self.WordLists = {}
-        self.Dicts     = []
+        self.Outs          = []
+        self.WordListsKeys = []
+        self.WordLists     = {}
+        self.Dicts         = []
 params = Params()
 
 def ParseArgs():
@@ -44,6 +46,7 @@ def ParseArgs():
                     if currentWordList in params.WordLists:
                         print(f"wordList:{currentWordList} is already defined",end="\n")
                         exit(1)
+                    params.WordListsKeys.append(currentWordList)
                     params.WordLists[currentWordList] = []
                     continue
                 if(arg in params.WordLists[currentWordList]):
@@ -115,9 +118,8 @@ def main():
     #parsing of dictionarys
     for d in params.Dicts:
         ParseCsvFile(d)
-    wordListKeys:List[str] = list(params.WordLists.keys())
     for i,file in enumerate(params.Outs):
-        WriteCsvFile(file,wordListKeys[i])
+        WriteCsvFile(file,params.WordListsKeys[i])
     return
 
 if __name__ == "__main__":
