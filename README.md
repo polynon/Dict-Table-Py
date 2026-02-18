@@ -12,14 +12,16 @@ Currently suported datatable types
 
 ### Usage
 
-`-o`   Flag is used to mark the output files
-`-wl`  Flag is used to mark the Search spaces first arg of this flag is the name of the search space
+. `-o`   Flag is used to mark the output files
+. `-wl`  Flag is used to mark the Search spaces first arg of this flag is the name of the search space
 Output Flag and wordList flag have to have the same number of names
-`-d`   Flag is used to mark what files to look through
+. `-d`   Flag is used to mark what files to look through
+. `-c`   Flag is used to mark the following wordlists as not case sensitive
+. `-C`   Flag is used to mark the following wordlists as case sensitive
 
 ### Basic Example
 
-#####build\.sh
+##### build\.sh
 
 `python main.py -o want.csv love.csv \
 -wl want want desire wish need -wl love love like enjoy\

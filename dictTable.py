@@ -4,18 +4,27 @@ from enum import Enum,auto
 from pprint import pprint
 
 class Modes(Enum):
-    NONE     = 0,
-    OUT      = 1,
-    WORDLIST = 2,
-    DICTS    = 3,
+    NONE       = 0,
+    OUT        = 1,
+    WORDLIST   = 2,
+    DICTS      = 3,
+    CASESEN    = 4,
+    NOTCASESEN = 5,
 
-Map:Dict[str,Modes] = {"-o":Modes.OUT,"-wl":Modes.WORDLIST,"-d":Modes.DICTS}
+Map:Dict[str,Modes] = {"-o":Modes.OUT,"-wl":Modes.WORDLIST,"-d":Modes.DICTS,"-c":Modes.NOTCASESEN,"-C":Modes.CASESEN}
+
+class WordList:
+    List:List[str]
+    CaseSensitive:bool
+    def __init__(self):
+        self.List = []
+        self.CaseSensitive = True
 
 #static
 class Params:
     Outs:List[str]
     WordListsKeys:List[str]
-    WordLists:Dict[str,List[str]]
+    WordLists:Dict[str,WordList]
     Dicts:List[str]
     def __init__(self):
         self.Outs          = []
@@ -27,11 +36,16 @@ params = Params()
 def ParseArgs():
     mode:Modes = Modes.NONE;
     currentWordList:str = ""
+    CaseSensitive:bool = True;
     for i, arg in enumerate(argv):
         if i == 0: 
             continue
         if arg[0] == '-' and arg in Map:
             mode = Map[arg]
+            if mode == Modes.CASESEN:
+                CaseSensitive = True
+            if mode == Modes.NOTCASESEN:
+                CaseSensitive = False
             currentWordList = ""
             continue
         match mode:
@@ -47,13 +61,14 @@ def ParseArgs():
                         print(f"wordList:{currentWordList} is already defined",end="\n")
                         exit(1)
                     params.WordListsKeys.append(currentWordList)
-                    params.WordLists[currentWordList] = []
+                    wl = WordList()
+                    wl.CaseSensitive = CaseSensitive
+                    params.WordLists[currentWordList] = wl 
                     continue
-                if(arg in params.WordLists[currentWordList]):
+                if(arg in params.WordLists[currentWordList].List):
                     print(f"word:{arg} already defined in wordlist:{currentWordList}",end="\n")
                     exit(1)
-                params.WordLists[currentWordList].append(arg);
-                AllWords.append(arg)
+                params.WordLists[currentWordList].List.append(arg);
             case Modes.DICTS:
                 if(arg in params.Dicts):
                     print(f"dictinary file:{arg} has already been provided",end="\n")
@@ -66,7 +81,6 @@ def ParseArgs():
                 print("unexpected flag mode[code bug]",end="\n")
                 exit(1)
 
-AllWords:List[str] = []
 DictionaryWithMeanings:Dict[str,Dict[str,List[str]]] = {}
 
 def ParseCsvFile(file:str):
@@ -80,20 +94,26 @@ def ParseCsvFile(file:str):
                 if not line:
                     break
                 definetions = line.split(",")
-                if definetions[0] not in AllWords:
-                    continue 
-                if definetions[0] not in DictionaryWithMeanings[file]:
-                    DictionaryWithMeanings[file][definetions[0]] = definetions[1:-1:]
-                    continue
-                for item in definetions[1:-1:]:
-                    DictionaryWithMeanings[file][definetions[0]].append(item)
+                for key in params.WordListsKeys:
+                    for word in params.WordLists[key].List:
+                        defi = definetions[0]
+                        if not params.WordLists[key].CaseSensitive:
+                            word = word.lower()    
+                            defi = defi.lower()
+                        if defi != word:
+                            continue 
+                        if defi not in DictionaryWithMeanings[file]:
+                            DictionaryWithMeanings[file][defi] = definetions[1:-1:]
+                            continue
+                        for item in definetions[1:-1:]:
+                            DictionaryWithMeanings[file][defi].append(item)
     except FileNotFoundError:
         print(f"file:{file} does not exist",end="\n")
         exit(1)
 
 def WriteCsvFile(file:str,key:str):
     #don't think writing to file can fail
-    words:List[str] = params.WordLists[key] 
+    words:List[str] = params.WordLists[key].List 
     with open(file,"w") as csv:
         for word in words:
             csv.write(f"{word},")
